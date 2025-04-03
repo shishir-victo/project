@@ -1,0 +1,276 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Student Attendance System{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12 mb-4">
+        <div class="d-sm-flex align-items-center justify-content-between">
+            <h1 class="h3 mb-0"><i class="fas fa-tachometer-alt me-2"></i>Teacher Dashboard</h1>
+            <div>
+                <a href="{{ url_for('take_attendance') }}" class="btn btn-primary btn-sm mr-2">
+                    <i class="fas fa-camera me-1"></i> Take Attendance
+                </a>
+                <a href="{{ url_for('student_register') }}" class="btn btn-success btn-sm">
+                    <i class="fas fa-user-plus me-1"></i> Add Student
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Statistics Cards -->
+<div class="row">
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-primary shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-primary text-uppercase mb-1">
+                            Classes</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ classes|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-chalkboard-teacher fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-success shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-success text-uppercase mb-1">
+                            Total Students</div>
+                        <div class="h5 mb-0 font-weight-bold">
+                            {% set total_students = namespace(count=0) %}
+                            {% for class_obj in classes %}
+                                {% set total_students.count = total_students.count + (class_obj.students|length) %}
+                            {% endfor %}
+                            {{ total_students.count }}
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-user-graduate fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-info shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-info text-uppercase mb-1">
+                            Average Attendance</div>
+                        <div class="row no-gutters align-items-center">
+                            <div class="col-auto">
+                                <div class="h5 mb-0 mr-3 font-weight-bold">
+                                    {% set total_rate = namespace(sum=0, count=0) %}
+                                    {% for stat in attendance_stats %}
+                                        {% if stat.attendance_rate > 0 %}
+                                            {% set total_rate.sum = total_rate.sum + stat.attendance_rate %}
+                                            {% set total_rate.count = total_rate.count + 1 %}
+                                        {% endif %}
+                                    {% endfor %}
+                                    {{ (total_rate.sum / total_rate.count) | round(1) if total_rate.count else 0 }}%
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="progress progress-sm mr-2">
+                                    <div class="progress-bar bg-info" role="progressbar"
+                                        style="width: {{ (total_rate.sum / total_rate.count) if total_rate.count else 0 }}%"
+                                        aria-valuenow="{{ (total_rate.sum / total_rate.count) | round if total_rate.count else 0 }}" aria-valuemin="0"
+                                        aria-valuemax="100"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-clipboard-list fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-xl-3 col-md-6 mb-4">
+        <div class="card border-left-warning shadow h-100 py-2">
+            <div class="card-body">
+                <div class="row no-gutters align-items-center">
+                    <div class="col mr-2">
+                        <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">
+                            Recent Sessions</div>
+                        <div class="h5 mb-0 font-weight-bold">{{ recent_sessions|length }}</div>
+                    </div>
+                    <div class="col-auto">
+                        <i class="fas fa-calendar fa-2x text-gray-300"></i>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Content Row -->
+<div class="row">
+    <!-- Classes Overview -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
+                <h6 class="m-0 font-weight-bold text-primary">Your Classes</h6>
+                <a href="#" class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#classModal">
+                    <i class="fas fa-plus-circle"></i> Add Class
+                </a>
+            </div>
+            <div class="card-body">
+                {% if classes %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Class Name</th>
+                                <th>Students</th>
+                                <th>Attendance Rate</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for class_obj in classes %}
+                            <tr>
+                                <td>{{ class_obj.name }}</td>
+                                <td>{{ class_obj.students|length }}</td>
+                                <td>
+                                    {% for stat in attendance_stats %}
+                                        {% if stat.class_name == class_obj.name %}
+                                            {% set rate = stat.attendance_rate %}
+                                            {% set color = 'danger' if rate < 75 else ('warning' if rate < 90 else 'success') %}
+                                            <div class="progress">
+                                                <div class="progress-bar bg-{{ color }}" role="progressbar"
+                                                    style="width: {{ rate }}%" aria-valuenow="{{ rate }}"
+                                                    aria-valuemin="0" aria-valuemax="100">{{ rate }}%</div>
+                                            </div>
+                                        {% endif %}
+                                    {% endfor %}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_class', class_id=class_obj.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                    <a href="#" class="btn btn-sm btn-primary">
+                                        <i class="fas fa-edit"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-chalkboard fa-3x text-gray-300 mb-3"></i>
+                    <p>You haven't created any classes yet.</p>
+                    <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#classModal">
+                        <i class="fas fa-plus-circle me-1"></i> Create Your First Class
+                    </button>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Recent Attendance Sessions -->
+    <div class="col-lg-6 mb-4">
+        <div class="card shadow mb-4">
+            <div class="card-header py-3">
+                <h6 class="m-0 font-weight-bold text-primary">Recent Attendance Sessions</h6>
+            </div>
+            <div class="card-body">
+                {% if recent_sessions %}
+                <div class="table-responsive">
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Class</th>
+                                <th>Date</th>
+                                <th>Status</th>
+                                <th>Present</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for session in recent_sessions %}
+                            <tr>
+                                <td>{{ session.class_obj.name }}</td>
+                                <td>{{ session.session_date.strftime('%d %b %Y') }}</td>
+                                <td>
+                                    {% if session.status == 'in_progress' %}
+                                    <span class="badge bg-warning">In Progress</span>
+                                    {% elif session.status == 'completed' %}
+                                    <span class="badge bg-success">Completed</span>
+                                    {% else %}
+                                    <span class="badge bg-danger">Failed</span>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% set present_count = session.attendance_records|selectattr('status', 'equalto', 'present')|list|length %}
+                                    {% set total_count = session.attendance_records|length %}
+                                    {{ present_count }}/{{ total_count }}
+                                </td>
+                                <td>
+                                    <a href="{{ url_for('view_attendance', session_id=session.id) }}" class="btn btn-sm btn-info">
+                                        <i class="fas fa-eye"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+                {% else %}
+                <div class="text-center py-4">
+                    <i class="fas fa-camera fa-3x text-gray-300 mb-3"></i>
+                    <p>No attendance sessions recorded yet.</p>
+                    <a href="{{ url_for('take_attendance') }}" class="btn btn-primary">
+                        <i class="fas fa-camera me-1"></i> Take First Attendance
+                    </a>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add Class Modal -->
+<div class="modal fade" id="classModal" tabindex="-1" aria-labelledby="classModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="classModalLabel">Add New Class</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form method="POST" action="{{ url_for('manage_classes') }}">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Class Name</label>
+                        <input type="text" class="form-control" id="name" name="name" required>
+                    </div>
+                    <div class="mb-3">
+                        <label for="description" class="form-label">Description (Optional)</label>
+                        <textarea class="form-control" id="description" name="description" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Class</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

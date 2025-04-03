@@ -1,0 +1,174 @@
+{% extends "base.html" %}
+
+{% block title %}Register Student - Student Attendance System{% endblock %}
+
+{% block head %}
+<style>
+    #video-container {
+        position: relative;
+        max-width: 100%;
+        margin: 0 auto;
+    }
+    #video {
+        width: 100%;
+        border-radius: 8px;
+        border: 2px solid #0d6efd;
+    }
+    #capture-btn {
+        position: absolute;
+        bottom: 10px;
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 10;
+    }
+    #preview-container {
+        display: none;
+        position: relative;
+        margin: 1rem auto;
+        border-radius: 8px;
+        border: 2px solid #198754;
+        overflow: hidden;
+    }
+    #preview {
+        width: 100%;
+        display: block;
+    }
+    #face-outline {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 200px;
+        height: 200px;
+        border: 2px dashed #ffc107;
+        border-radius: 50%;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .camera-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+    .face-guide {
+        width: 180px;
+        height: 200px;
+        border: 2px dashed rgba(255, 255, 255, 0.5);
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-lg-8">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white">
+                <h4 class="mb-0"><i class="fas fa-user-plus me-2"></i>Register New Student</h4>
+            </div>
+            <div class="card-body">
+                <form method="POST" action="{{ url_for('student_register') }}" enctype="multipart/form-data" id="studentForm">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="name" class="form-label">Full Name</label>
+                                <input type="text" class="form-control" id="name" name="name" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="student_id" class="form-label">Student ID</label>
+                                <input type="text" class="form-control" id="student_id" name="student_id" required>
+                                <div class="form-text">Unique identifier for the student</div>
+                            </div>
+                            <div class="mb-3">
+                                <label for="email" class="form-label">Email (Optional)</label>
+                                <input type="email" class="form-control" id="email" name="email">
+                            </div>
+                            <div class="mb-3">
+                                <label for="class_id" class="form-label">Class</label>
+                                <select class="form-select" id="class_id" name="class_id" required>
+                                    <option value="">Select a class</option>
+                                    {% for class_obj in classes %}
+                                    <option value="{{ class_obj.id }}">{{ class_obj.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label">Student Photo</label>
+                                <div class="border rounded p-3 bg-dark">
+                                    <div class="btn-group w-100 mb-3" role="group">
+                                        <input type="radio" class="btn-check" name="photo-source" id="camera-option" autocomplete="off" checked>
+                                        <label class="btn btn-outline-primary" for="camera-option">
+                                            <i class="fas fa-camera me-1"></i> Use Camera
+                                        </label>
+                                        
+                                        <input type="radio" class="btn-check" name="photo-source" id="upload-option" autocomplete="off">
+                                        <label class="btn btn-outline-primary" for="upload-option">
+                                            <i class="fas fa-upload me-1"></i> Upload Photo
+                                        </label>
+                                    </div>
+                                    
+                                    <div id="camera-source">
+                                        <div id="video-container" class="mb-3">
+                                            <video id="video" autoplay playsinline></video>
+                                            <div class="camera-overlay">
+                                                <div class="face-guide"></div>
+                                            </div>
+                                            <button id="capture-btn" type="button" class="btn btn-primary btn-lg rounded-circle">
+                                                <i class="fas fa-camera"></i>
+                                            </button>
+                                        </div>
+                                        
+                                        <div id="preview-container" class="mb-3">
+                                            <img id="preview" src="#" alt="Preview">
+                                            <button id="retake-btn" type="button" class="btn btn-warning position-absolute bottom-0 start-0 m-2">
+                                                <i class="fas fa-redo me-1"></i> Retake
+                                            </button>
+                                        </div>
+                                    </div>
+                                    
+                                    <div id="upload-source" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="photo-upload" class="form-label">Upload Student Photo</label>
+                                            <input class="form-control" type="file" id="photo-upload" accept="image/*">
+                                            <div class="form-text">Please upload a clear face photo</div>
+                                        </div>
+                                        <div id="upload-preview-container" class="mb-3 text-center" style="display: none;">
+                                            <img id="upload-preview" src="#" alt="Upload Preview" style="max-width: 100%; max-height: 200px; border-radius: 8px;">
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-text text-warning">
+                                    <i class="fas fa-info-circle me-1"></i> Make sure the face is clearly visible and well-lit
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <input type="file" id="photo" name="photo" style="display: none;" accept="image/*">
+                    
+                    <div class="d-flex justify-content-between mt-4">
+                        <a href="{{ url_for('dashboard') }}" class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-1"></i> Back to Dashboard
+                        </a>
+                        <button type="submit" class="btn btn-success" id="submit-btn">
+                            <i class="fas fa-save me-1"></i> Register Student
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/student_register.js') }}"></script>
+{% endblock %}

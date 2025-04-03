@@ -1,0 +1,138 @@
+/* Custom styles for Student Attendance System */
+
+/* Increase spacing in the content area */
+main.container {
+    padding-bottom: 2rem;
+}
+
+/* Card styling */
+.card {
+    border-radius: 0.5rem;
+    overflow: hidden;
+    margin-bottom: 1.5rem;
+}
+
+.card-header {
+    padding: 1rem 1.25rem;
+}
+
+/* Custom border-left cards for statistics */
+.card.border-left-primary {
+    border-left: 4px solid #0d6efd;
+}
+
+.card.border-left-success {
+    border-left: 4px solid #198754;
+}
+
+.card.border-left-info {
+    border-left: 4px solid #0dcaf0;
+}
+
+.card.border-left-warning {
+    border-left: 4px solid #ffc107;
+}
+
+/* Progress bar styling */
+.progress {
+    height: 0.8rem;
+    font-size: 0.65rem;
+    border-radius: 1rem;
+}
+
+/* Table styling */
+.table-hover tbody tr:hover {
+    background-color: rgba(13, 110, 253, 0.05);
+}
+
+/* Form styling */
+.form-control:focus, .form-select:focus {
+    box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+/* Custom button shadows */
+.btn {
+    box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+}
+
+/* Footer styling */
+.footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+}
+
+/* Status badges */
+.badge {
+    font-weight: 500;
+    padding: 0.35em 0.65em;
+}
+
+/* Class card hover effect */
+.class-card {
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.class-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Custom alert styling */
+.alert {
+    border-radius: 0.5rem;
+    border: none;
+}
+
+.alert-dismissible .btn-close {
+    padding: 0.75rem 1rem;
+}
+
+/* Session status colors */
+.status-completed {
+    color: #198754;
+}
+
+.status-in-progress {
+    color: #ffc107;
+}
+
+.status-failed {
+    color: #dc3545;
+}
+
+/* Mobile responsive adjustments */
+@media (max-width: 768px) {
+    .card-header {
+        padding: 0.75rem 1rem;
+    }
+    
+    h1.h3 {
+        font-size: 1.5rem;
+    }
+    
+    .navbar-brand {
+        font-size: 1.1rem;
+    }
+    
+    .btn-sm {
+        padding: 0.25rem 0.5rem;
+        font-size: 0.75rem;
+    }
+}
+
+/* Animation for processing spinner */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.1);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+
+.spinner-border {
+    animation: spinner-border 1s linear infinite, pulse 2s ease infinite;
+}
